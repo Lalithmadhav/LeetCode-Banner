@@ -1,6 +1,9 @@
 package github.banner.leetcode;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,10 +15,9 @@ public class LeetCodeController {
     private LeetCodeService Service;
 
     @GetMapping(value = "/api/streak/{username}", produces = "image/svg+xml")
-    public String getStreakSvg(@PathVariable String username) {
+    public ResponseEntity<String> getStreakSvg(@PathVariable String username) {
         LeetCodeStats stats = Service.getUserStats(username);
-        return
-        "<svg xmlns='http://www.w3.org/2000/svg' width='450' height='130' viewBox='0 0 450 130'>" +
+        String svgContent = "<svg xmlns='http://www.w3.org/2000/svg' width='450' height='130' viewBox='0 0 450 130'>" +
                 "  " +
                 "  <rect width='100%' height='100%' rx='12' fill='#1e1e1e' stroke='#ffa116' stroke-width='1.5'/>" +
 
@@ -47,5 +49,14 @@ public class LeetCodeController {
                 "  <text x='260' y='112' fill='#ff2d55' font-family='Segoe UI, sans-serif' font-size='13' font-weight='600'>Hard</text>" +
                 "  <text x='340' y='112' fill='#ffffff' font-family='Segoe UI, sans-serif' font-size='14' font-weight='bold' text-anchor='end'>" + stats.getHardSolved() + "</text>" +
                 "</svg>";
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setCacheControl(CacheControl.noCache().mustRevalidate());
+        httpHeaders.add("Pragma", "no-cache");
+        httpHeaders.add("Expires", "0");
+
+        return ResponseEntity.ok()
+                .headers(httpHeaders)
+                .body(svgContent);
     }
 }
